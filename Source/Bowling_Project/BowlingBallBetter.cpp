@@ -23,9 +23,9 @@ ABowlingBallBetter::ABowlingBallBetter()
     // Attach our camera and visible object to our root component. Offset and rotate the camera.
     OurCamera->SetupAttachment(RootComponent);
     OurCamera->SetRelativeLocation(FVector(-250.0f, 0.0f, 250.0f));
-    OurCamera->SetRelativeRotation(FRotator(-90.0f, 0.0f, 0.0f));
+    OurCamera->SetRelativeRotation(FRotator(-45.0f, 0.0f, 0.0f));
     
-    Mesh->SetupAttachment(RootComponent);
+    Mesh->SetupAttachment(OurVisibleComponent);
     
     
 
@@ -47,8 +47,7 @@ void ABowlingBallBetter::Tick(float DeltaTime)
     if (!CurrentVelocity.IsZero())
     {
         FVector NewLocation = GetActorLocation() + (CurrentVelocity * DeltaTime);
-        SetActorLocation(NewLocation + FVector(0,0,50));
-        Mesh->SetRelativeLocation(NewLocation + FVector(0,0,50));
+        SetActorLocation(NewLocation);
     }
 
 }
@@ -58,16 +57,16 @@ void ABowlingBallBetter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
     
-    // Respond every frame to the values of our two movement axes, "Move_XAxis"
-   InputComponent->BindAxis("Move_XAxis", this, &ABowlingBallBetter::Move_XAxis);
+    // Respond every frame to the values of our two movement axes, "Move_ZAxis"
+   InputComponent->BindAxis("Move_YAxis", this, &ABowlingBallBetter::Move_YAxis);
 }
 
-void ABowlingBallBetter::Move_XAxis(float AxisValue)
+void ABowlingBallBetter::Move_YAxis(float AxisValue)
 {
-    UE_LOG(LogTemp, Warning, TEXT("Calling move x axis function"));
+    UE_LOG(LogTemp, Warning, TEXT("Calling move Y axis function"));
     
     // Move at 100 units per second forward or backward
-    CurrentVelocity.X = FMath::Clamp(AxisValue, -1.0f, 1.0f) * 100.0f;
+    CurrentVelocity.Y = FMath::Clamp(AxisValue, -1.0f, 1.0f) * 100.0f;
 }
 
 
