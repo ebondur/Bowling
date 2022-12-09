@@ -25,5 +25,15 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+    
+    UPROPERTY(EditAnywhere)
+    USceneComponent* OurVisibleComponent;
+    
+    // Input functions
+    void Move_XAxis(float AxisValue);
+    void Move_YAxis(float AxisValue);
+    
+    // Input variables
+    FVector CurrentVelocity;
 
 };
