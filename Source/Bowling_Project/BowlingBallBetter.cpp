@@ -12,20 +12,20 @@ ABowlingBallBetter::ABowlingBallBetter()
 	PrimaryActorTick.bCanEverTick = true;
     
     AutoPossessPlayer = EAutoReceiveInput::Player0;
-    
-    UPROPERTY(EditAnywhere)
-    float radius = 5.0f;
-    
+        
     // Create a dummy root component we can attach things to.
     OurVisibleComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+    
     // Create a camera and a visible object
     UCameraComponent* OurCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("OurCamera"));
-    OurVisibleComponent= CreateDefaultSubobject<UStaticMeshComponent>(TEXT("OurVisibleComponent"));
+    Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
+    
     // Attach our camera and visible object to our root component. Offset and rotate the camera.
     OurCamera->SetupAttachment(RootComponent);
     OurCamera->SetRelativeLocation(FVector(-250.0f, 0.0f, 250.0f));
-    OurCamera->SetRelativeRotation(FRotator(-45.0f, 0.0f, 0.0f));
-    OurVisibleComponent->SetupAttachment(RootComponent);
+    OurCamera->SetRelativeRotation(FRotator(-90.0f, 0.0f, 0.0f));
+    
+    Mesh->SetupAttachment(RootComponent);
     
     
 
@@ -47,7 +47,8 @@ void ABowlingBallBetter::Tick(float DeltaTime)
     if (!CurrentVelocity.IsZero())
     {
         FVector NewLocation = GetActorLocation() + (CurrentVelocity * DeltaTime);
-        SetActorLocation(NewLocation); //will move to FinterpV later
+        SetActorLocation(NewLocation + FVector(0,0,50));
+        Mesh->SetRelativeLocation(NewLocation + FVector(0,0,50));
     }
 
 }
@@ -57,20 +58,16 @@ void ABowlingBallBetter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
     
-    // Respond every frame to the values of our two movement axes, "MoveX" and "MoveY".
-   InputComponent->BindAxis("MoveX", this, &ABowlingBallBetter::Move_XAxis);
-   InputComponent->BindAxis("MoveY", this, &ABowlingBallBetter::Move_YAxis);
+    // Respond every frame to the values of our two movement axes, "Move_XAxis"
+   InputComponent->BindAxis("Move_XAxis", this, &ABowlingBallBetter::Move_XAxis);
 }
 
 void ABowlingBallBetter::Move_XAxis(float AxisValue)
 {
+    UE_LOG(LogTemp, Warning, TEXT("Calling move x axis function"));
+    
     // Move at 100 units per second forward or backward
     CurrentVelocity.X = FMath::Clamp(AxisValue, -1.0f, 1.0f) * 100.0f;
 }
 
-void ABowlingBallBetter::Move_YAxis(float AxisValue)
-{
-    // Move at 100 units per second right or left
-    CurrentVelocity.Y = FMath::Clamp(AxisValue, -1.0f, 1.0f) * 100.0f;
-}
 

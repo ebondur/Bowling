@@ -29,9 +29,11 @@ public:
     UPROPERTY(EditAnywhere)
     USceneComponent* OurVisibleComponent;
     
+    UPROPERTY(EditAnywhere)
+    UStaticMeshComponent* Mesh;
+    
     // Input functions
     void Move_XAxis(float AxisValue);
-    void Move_YAxis(float AxisValue);
     
     // Input variables
     FVector CurrentVelocity;
