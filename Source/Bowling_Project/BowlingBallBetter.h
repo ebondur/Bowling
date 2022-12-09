@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "Camera/CameraComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "BowlingBallBetter.generated.h"
 
 UCLASS()
@@ -31,6 +34,12 @@ public:
     
     UPROPERTY(EditAnywhere)
     UStaticMeshComponent* Mesh;
+    
+    UPROPERTY(EditAnywhere)
+    UCameraComponent* OurCamera;
+    
+    UPROPERTY(EditAnywhere)
+    USpringArmComponent* SpringArm;
     
     // Input functions
     void Move_YAxis(float AxisValue);
