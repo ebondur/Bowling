@@ -27,6 +27,7 @@ ABowlingBallBetter::ABowlingBallBetter()
     OurCamera->SetRelativeRotation(FRotator(-45.0f, 0.0f, 0.0f));
     OurVisibleComponent->SetupAttachment(RootComponent);
     
+    
 
 }
 
@@ -42,12 +43,34 @@ void ABowlingBallBetter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+    // Handle movement based on our "MoveX" and "MoveY" axes
+    if (!CurrentVelocity.IsZero())
+    {
+        FVector NewLocation = GetActorLocation() + (CurrentVelocity * DeltaTime);
+        SetActorLocation(NewLocation); //will move to FinterpV later
+    }
+
 }
 
 // Called to bind functionality to input
 void ABowlingBallBetter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+    
+    // Respond every frame to the values of our two movement axes, "MoveX" and "MoveY".
+   InputComponent->BindAxis("MoveX", this, &ABowlingBallBetter::Move_XAxis);
+   InputComponent->BindAxis("MoveY", this, &ABowlingBallBetter::Move_YAxis);
+}
 
+void ABowlingBallBetter::Move_XAxis(float AxisValue)
+{
+    // Move at 100 units per second forward or backward
+    CurrentVelocity.X = FMath::Clamp(AxisValue, -1.0f, 1.0f) * 100.0f;
+}
+
+void ABowlingBallBetter::Move_YAxis(float AxisValue)
+{
+    // Move at 100 units per second right or left
+    CurrentVelocity.Y = FMath::Clamp(AxisValue, -1.0f, 1.0f) * 100.0f;
 }
 
