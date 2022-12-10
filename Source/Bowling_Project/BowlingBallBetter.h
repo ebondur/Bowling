@@ -7,6 +7,9 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "DrawDebugHelpers.h"
+#include "Math/UnrealMathUtility.h"
+
 #include "BowlingBallBetter.generated.h"
 
 UCLASS()
@@ -43,7 +46,11 @@ public:
     
     // Input functions
     void Move_YAxis(float AxisValue);
+    void RollBall();
     
     // Input variables
     FVector CurrentVelocity;
+    FVector CurrentLoc;
+    FVector NewLoc;
+    int BallWeight;
 };

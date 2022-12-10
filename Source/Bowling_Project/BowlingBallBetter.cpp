@@ -20,32 +20,37 @@ ABowlingBallBetter::ABowlingBallBetter()
     
     SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("Spring Arm"));
     SpringArm->SetupAttachment(RootComponent);
-    SpringArm->SetRelativeRotation(FRotator(0.0, -30.0, 0.0));
     
     // Attach our camera and visible object to our spring arm component.
     OurCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("OurCamera"));
     OurCamera->SetupAttachment(SpringArm);
+    
+    BallWeight = 10; //represents different weights/types of bowling balls, need to implement later
 }
 
 // Called when the game starts or when spawned
 void ABowlingBallBetter::BeginPlay()
 {
     Super::BeginPlay();
-    
+    CurrentLoc = GetActorLocation(), NewLoc = GetActorLocation();
 }
 
 // Called every frame
 void ABowlingBallBetter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
+    
+    DrawDebugLine(GetWorld(), GetActorLocation(), GetActorLocation() + FVector(1000,0,0), FColor::Blue, false, -1, 0, 10);
 
-    // Handle movement based on our "MoveX" and "MoveY" axes
+    // Handle side to side movement based on our "MoveY" axes
     if (!CurrentVelocity.IsZero())
     {
-        FVector NewLocation = GetActorLocation() + (CurrentVelocity * DeltaTime);
-        SetActorLocation(NewLocation);
+        SetActorLocation(GetActorLocation() + (CurrentVelocity * DeltaTime));
     }
-
+    if (CurrentLoc != NewLoc) { //we have rolled the ball
+        CurrentLoc = FMath::VInterpTo(CurrentLoc, NewLoc, DeltaTime, 0.5);
+        SetActorLocation(CurrentLoc);
+    }
 }
 
 // Called to bind functionality to input
@@ -54,7 +59,8 @@ void ABowlingBallBetter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
     Super::SetupPlayerInputComponent(PlayerInputComponent);
     
     // Respond every frame to the values of our two movement axes, "Move_ZAxis"
-   InputComponent->BindAxis("Move_YAxis", this, &ABowlingBallBetter::Move_YAxis);
+    InputComponent->BindAxis("Move_YAxis", this, &ABowlingBallBetter::Move_YAxis);
+    InputComponent->BindAction("RollBall", IE_Pressed, this, &ABowlingBallBetter::RollBall);
 }
 
 void ABowlingBallBetter::Move_YAxis(float AxisValue)
@@ -65,3 +71,31 @@ void ABowlingBallBetter::Move_YAxis(float AxisValue)
     CurrentVelocity.Y = FMath::Clamp(AxisValue, -1.0f, 1.0f) * 100.0f;
 }
 
+void ABowlingBallBetter::RollBall() {
+    CurrentLoc = GetActorLocation();
+    NewLoc = GetActorLocation() + FVector(1000, 0, 0); //just for testing
+    
+    FComponentQueryParams P = FComponentQueryParams();
+    P.AddIgnoredActor(this);
+    
+    // create tarray for hit results
+    TArray<FHitResult> OutHits;
+    bool isHit = GetWorld()->ComponentSweepMulti(OutHits, Mesh, CurrentLoc, NewLoc, GetActorRotation(), P);
+    
+    if (isHit) {
+        // loop through TArray
+        for (auto& Hit : OutHits)
+        {
+            if (GEngine)
+            {
+                // screen log information on what was hit
+                GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Hit Result: %s"), *Hit.GetActor()->GetName()));
+                // uncommnet to see more info on sweeped actor
+                GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("All Hit Information: %s"), *Hit.ToString()));
+            }
+        }
+        NewLoc = OutHits[0].Location; //first pin we hit
+        
+        DrawDebugLine(GetWorld(), OutHits[0].Location, OutHits[0].Normal * -100, FColor::Red, false, 100, 0, 10);
+    }
+}
