@@ -9,6 +9,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Math/UnrealMathUtility.h"
+#include "BowlingPin.h"
 
 #include "BowlingBallBetter.generated.h"
 
@@ -48,9 +49,13 @@ public:
     void Move_YAxis(float AxisValue);
     void RollBall();
     
-    // Input variables
     FVector CurrentVelocity;
     FVector CurrentLoc;
     FVector NewLoc;
+    FVector CollisionLoc;
+    
+    ABowlingPin* BP;
+    
     int BallWeight;
+    bool isHit, isMoving; 
 };

@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "BowlingBallBetter.h"
 
 // Sets default values
@@ -26,6 +25,7 @@ ABowlingBallBetter::ABowlingBallBetter()
     OurCamera->SetupAttachment(SpringArm);
     
     BallWeight = 10; //represents different weights/types of bowling balls, need to implement later
+    isHit = false, isMoving = false;
 }
 
 // Called when the game starts or when spawned
@@ -33,6 +33,7 @@ void ABowlingBallBetter::BeginPlay()
 {
     Super::BeginPlay();
     CurrentLoc = GetActorLocation(), NewLoc = GetActorLocation();
+    CollisionLoc = FVector(0);
 }
 
 // Called every frame
@@ -47,8 +48,16 @@ void ABowlingBallBetter::Tick(float DeltaTime)
     {
         SetActorLocation(GetActorLocation() + (CurrentVelocity * DeltaTime));
     }
-    if (CurrentLoc != NewLoc) { //we have rolled the ball
-        CurrentLoc = FMath::VInterpTo(CurrentLoc, NewLoc, DeltaTime, 0.5);
+    
+    if (CurrentLoc.Equals(CollisionLoc, 5.0f)) {
+        NewLoc = CollisionLoc;
+        CollisionLoc = FVector(0.0f);
+        isMoving = false;
+        BP->isHit = true;
+    }
+    
+    if (CurrentLoc != NewLoc && isMoving) { //we have rolled the ball
+        CurrentLoc = FMath::VInterpTo(CurrentLoc, NewLoc, DeltaTime, 0.5f);
         SetActorLocation(CurrentLoc);
     }
 }
@@ -72,18 +81,18 @@ void ABowlingBallBetter::Move_YAxis(float AxisValue)
 }
 
 void ABowlingBallBetter::RollBall() {
+    isMoving = true;
     CurrentLoc = GetActorLocation();
-    NewLoc = GetActorLocation() + FVector(1000, 0, 0); //just for testing
+    NewLoc = GetActorLocation() + GetActorRightVector() + FVector(1000, 0, 0); //just for testing
     
     FComponentQueryParams P = FComponentQueryParams();
-    P.AddIgnoredActor(this);
+    P.AddIgnoredActor(this); //so we dont hit ourself
     
     // create tarray for hit results
     TArray<FHitResult> OutHits;
-    bool isHit = GetWorld()->ComponentSweepMulti(OutHits, Mesh, CurrentLoc, NewLoc, GetActorRotation(), P);
+    isHit = GetWorld()->ComponentSweepMulti(OutHits, Mesh, CurrentLoc, NewLoc, GetActorRotation(), P);
     
     if (isHit) {
-        // loop through TArray
         for (auto& Hit : OutHits)
         {
             if (GEngine)
@@ -91,11 +100,16 @@ void ABowlingBallBetter::RollBall() {
                 // screen log information on what was hit
                 GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Hit Result: %s"), *Hit.GetActor()->GetName()));
                 // uncommnet to see more info on sweeped actor
-                GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("All Hit Information: %s"), *Hit.ToString()));
+                 GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("All Hit Information: %s"), *Hit.ToString()));
             }
         }
-        NewLoc = OutHits[0].Location; //first pin we hit
+        //first pin we hit
+        BP = Cast<ABowlingPin>(OutHits[0].GetActor());
+        BP->NewLoc += OutHits[0].Normal * 100;
+
+        CollisionLoc = OutHits[0].Location;
         
-        DrawDebugLine(GetWorld(), OutHits[0].Location, OutHits[0].Normal * -100, FColor::Red, false, 100, 0, 10);
+        DrawDebugLine(GetWorld(), OutHits[0].Location, (OutHits[0].Normal * 100), FColor::Red, false, 100, 0, 10);
+        
     }
 }

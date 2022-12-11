@@ -29,5 +29,9 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+    
+    bool isHit;
+    
+    FVector CurrentLoc, NewLoc;
 
 };

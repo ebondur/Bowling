@@ -15,6 +15,7 @@ ABowlingPin::ABowlingPin()
     // Create a visible object
     Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
     Mesh->SetupAttachment(RootComponent);
+    isHit = false;
 }
 
 // Called when the game starts or when spawned
@@ -28,6 +29,11 @@ void ABowlingPin::BeginPlay()
 void ABowlingPin::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+    
+    if (isHit) {
+//        CurrentLoc = FMath::VInterpTo(CurrentLoc, NewLoc, DeltaTime, 0.1);
+//        SetActorLocation(CurrentLoc);
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("PIN HIT")));
+    }
 }
 
