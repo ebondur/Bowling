@@ -32,8 +32,11 @@ ABowlingBallBetter::ABowlingBallBetter()
 void ABowlingBallBetter::BeginPlay()
 {
     Super::BeginPlay();
-    CurrentLoc = GetActorLocation(), NewLoc = GetActorLocation();
+    CurrentLoc = GetActorLocation();
+    ThrowDistance = FVector(1000, 0, 0);
+    NewLoc = GetActorLocation() + ThrowDistance;
     CollisionLoc = FVector(0);
+    PostCollisionLoc = FVector(0);
 }
 
 // Called every frame
@@ -50,10 +53,10 @@ void ABowlingBallBetter::Tick(float DeltaTime)
     }
     
     if (CurrentLoc.Equals(CollisionLoc, 5.0f)) {
-        NewLoc = CollisionLoc;
+        NewLoc = PostCollisionLoc;
         CollisionLoc = FVector(0.0f);
-        isMoving = false;
         BP->isHit = true;
+        RollBall();
     }
     
     if (CurrentLoc != NewLoc && isMoving) { //we have rolled the ball
@@ -83,7 +86,8 @@ void ABowlingBallBetter::Move_YAxis(float AxisValue)
 void ABowlingBallBetter::RollBall() {
     isMoving = true;
     CurrentLoc = GetActorLocation();
-    NewLoc = GetActorLocation() + GetActorRightVector() + FVector(1000, 0, 0); //just for testing
+    FVector NewLocNormal = NewLoc - CurrentLoc;
+    NewLocNormal.Normalize();
     
     FComponentQueryParams P = FComponentQueryParams();
     P.AddIgnoredActor(this); //so we dont hit ourself
@@ -100,16 +104,25 @@ void ABowlingBallBetter::RollBall() {
                 // screen log information on what was hit
                 GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Hit Result: %s"), *Hit.GetActor()->GetName()));
                 // uncommnet to see more info on sweeped actor
-                 GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("All Hit Information: %s"), *Hit.ToString()));
+                GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("All Hit Information: %s"), *Hit.ToString()));
             }
         }
         //first pin we hit
         BP = Cast<ABowlingPin>(OutHits[0].GetActor());
-        BP->NewLoc += OutHits[0].Normal * 100;
+
+        FVector PinLocDirection = (OutHits[0].ImpactPoint - OutHits[0].Location);
+        PinLocDirection.Normalize();
+        float MaxAngle = 0.5 * PI;
+        float AngleMultiplier = modf(acos(FVector::DotProduct(NewLocNormal, PinLocDirection) / (NewLocNormal.Size() * PinLocDirection.Size())), &MaxAngle);
+        float PinLocMagnitude = (NewLoc - GetActorLocation()).Size() * AngleMultiplier;
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Hit angle: %f"), AngleMultiplier));
+
+        BP->NewLoc += PinLocDirection * PinLocMagnitude;
+        PostCollisionLoc = NewLoc - (PinLocDirection * PinLocMagnitude);
 
         CollisionLoc = OutHits[0].Location;
         
-        DrawDebugLine(GetWorld(), OutHits[0].Location, (OutHits[0].Normal * 100), FColor::Red, false, 100, 0, 10);
+        DrawDebugLine(GetWorld(), OutHits[0].Location, OutHits[0].ImpactPoint, FColor::Red, false, 100, 0, 10);
         
     }
 }

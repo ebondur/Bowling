@@ -22,6 +22,8 @@ ABowlingPin::ABowlingPin()
 void ABowlingPin::BeginPlay()
 {
 	Super::BeginPlay();
+
+    CurrentLoc = GetActorLocation(), NewLoc = GetActorLocation();
 	
 }
 
@@ -31,8 +33,8 @@ void ABowlingPin::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
     
     if (isHit) {
-//        CurrentLoc = FMath::VInterpTo(CurrentLoc, NewLoc, DeltaTime, 0.1);
-//        SetActorLocation(CurrentLoc);
+        CurrentLoc = FMath::VInterpTo(CurrentLoc, NewLoc, DeltaTime, 0.5f);
+        SetActorLocation(CurrentLoc);
         GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("PIN HIT")));
     }
 }

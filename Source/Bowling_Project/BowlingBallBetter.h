@@ -52,7 +52,9 @@ public:
     FVector CurrentVelocity;
     FVector CurrentLoc;
     FVector NewLoc;
-    FVector CollisionLoc;
+    FVector CollisionLoc; 
+    FVector PostCollisionLoc;
+    FVector ThrowDistance;
     
     ABowlingPin* BP;
     
