@@ -44,7 +44,7 @@ void ABowlingBallBetter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
     
-    DrawDebugLine(GetWorld(), GetActorLocation(), GetActorLocation() + FVector(1000,0,0), FColor::Blue, false, -1, 0, 10);
+    DrawDebugLine(GetWorld(), GetActorLocation(), GetActorLocation() + ThrowDistance, FColor::Blue, false, -1, 0, 10);
 
     // Handle side to side movement based on our "MoveY" axes
     if (!CurrentVelocity.IsZero())
@@ -55,7 +55,7 @@ void ABowlingBallBetter::Tick(float DeltaTime)
     if (CurrentLoc.Equals(CollisionLoc, 5.0f)) {
         NewLoc = PostCollisionLoc;
         CollisionLoc = FVector(0.0f);
-        BP->isHit = true;
+        BP->MovePin();
         RollBall();
     }
     
@@ -70,8 +70,9 @@ void ABowlingBallBetter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
     
-    // Respond every frame to the values of our two movement axes, "Move_ZAxis"
+    // Respond every frame to the values of our two movement axes, "Move_YAxis"
     InputComponent->BindAxis("Move_YAxis", this, &ABowlingBallBetter::Move_YAxis);
+
     InputComponent->BindAction("RollBall", IE_Pressed, this, &ABowlingBallBetter::RollBall);
 }
 
@@ -110,12 +111,14 @@ void ABowlingBallBetter::RollBall() {
         //first pin we hit
         BP = Cast<ABowlingPin>(OutHits[0].GetActor());
 
+        // Gets direction the pin will move in
         FVector PinLocDirection = (OutHits[0].ImpactPoint - OutHits[0].Location);
         PinLocDirection.Normalize();
+
+
         float MaxAngle = 0.5 * PI;
         float AngleMultiplier = modf(acos(FVector::DotProduct(NewLocNormal, PinLocDirection) / (NewLocNormal.Size() * PinLocDirection.Size())), &MaxAngle);
         float PinLocMagnitude = (NewLoc - GetActorLocation()).Size() * AngleMultiplier;
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Hit angle: %f"), AngleMultiplier));
 
         BP->NewLoc += PinLocDirection * PinLocMagnitude;
         PostCollisionLoc = NewLoc - (PinLocDirection * PinLocMagnitude);
@@ -125,4 +128,16 @@ void ABowlingBallBetter::RollBall() {
         DrawDebugLine(GetWorld(), OutHits[0].Location, OutHits[0].ImpactPoint, FColor::Red, false, 100, 0, 10);
         
     }
+}
+
+void ABowlingBallBetter::ChangeAngle() {
+    
+}
+
+void ABowlingBallBetter::ChangeSpeed() {
+
+}
+
+void ABowlingBallBetter::ChangeMass() {
+
 }

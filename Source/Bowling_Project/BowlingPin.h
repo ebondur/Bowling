@@ -29,9 +29,17 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+    void MovePin();
     
     bool isHit;
+    bool isMoving;
     
-    FVector CurrentLoc, NewLoc;
+    FVector CurrentLoc;
+    FVector NewLoc;
+    FVector CollisionLoc;
+    FVector PostCollisionLoc;
+
+    ABowlingPin* BP;
 
 };

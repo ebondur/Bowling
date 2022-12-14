@@ -48,6 +48,9 @@ public:
     // Input functions
     void Move_YAxis(float AxisValue);
     void RollBall();
+    void ChangeAngle();
+    void ChangeSpeed();
+    void ChangeMass();
     
     FVector CurrentVelocity;
     FVector CurrentLoc;
