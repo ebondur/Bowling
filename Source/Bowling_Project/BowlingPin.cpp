@@ -15,6 +15,11 @@ ABowlingPin::ABowlingPin()
     // Create a visible object
     Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
     Mesh->SetupAttachment(RootComponent);
+
+    Capsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponen"));
+    Capsule->SetupAttachment(RootComponent);
+    //Shape->MakeCapsule(0.5, 0.5);
+
     isHit = false, isMoving = false;
 }
 
@@ -47,61 +52,83 @@ void ABowlingPin::Tick(float DeltaTime)
         NewLoc = PostCollisionLoc;
         CollisionLoc = FVector(0.0f);
         BP->MovePin();
-        MovePin();
+        MovePin();      
     }
 }
 
 // Called after a bowling pin is hit
 void ABowlingPin::MovePin()
 {
+    isMoving = true;
     CurrentLoc = GetActorLocation();
     FVector NewLocNormal = NewLoc - CurrentLoc;
     NewLocNormal.Normalize();
 
 
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("CurrentLoc: %s"), *CurrentLoc.ToString()));
+    //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("CurrentLoc: %s"), *CurrentLoc.ToString()));
 
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("NewLoc: %s"), *NewLoc.ToString()));
+    //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("NewLoc: %s"), *NewLoc.ToString()));
 
-    FComponentQueryParams P = FComponentQueryParams();
-    // P.AddIgnoredActor(this); //so we dont hit ourself
+    FCollisionQueryParams P = FComponentQueryParams();
+    //FCollisionResponseParams R = FComponentQueryParams();
+    P.AddIgnoredActor(this); //so we dont hit ourself  
 
     // create tarray for hit results
     TArray<FHitResult> OutHits;
-    isHit = GetWorld()->ComponentSweepMulti(OutHits, Mesh, CurrentLoc, CurrentLoc + FVector(1000, 0, 0), GetActorRotation(), P);
+    FCollisionShape S = FCollisionShape::MakeCapsule(50.0, 50.0);   
+
+    isHit = GetWorld()->SweepMultiByChannel(OutHits, CurrentLoc, NewLoc, GetActorRotation().Quaternion(), ECC_WorldStatic, S, P);
 
     if (isHit) {
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("Mission Success! YAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY")));
+       
         for (auto& Hit : OutHits)
         {
             if (GEngine)
             {
+                //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("Mission Success! YAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY")));
                 // screen log information on what was hit
-                GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Hit Result: %s"), *Hit.GetActor()->GetName()));
+               // GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("PostCollision: %s"), *PostCollisionLoc.ToString()));
                 // uncommnet to see more info on sweeped actor
-                GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("All Hit Information: %s"), *Hit.ToString()));
+                //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("NewLoc: %s"), *NewLoc.ToString()));
             }
         }
-        //first pin we hit
-        BP = Cast<ABowlingPin>(OutHits[0].GetActor());
 
+        
+       // NewLoc = OutHits[0].Location;
+        
+        //first pin we hit
+        BP = NULL;
+        int i = 0;
+        while (BP == NULL) {
+            BP = Cast<ABowlingPin>(OutHits[i].GetActor());
+            i++;
+        }
+        i--;
+        //BP->NewLoc = FVector(0, 0, 0);
+        //BP->MovePin();
+        
         // Gets direction the pin will move in
-        FVector PinLocDirection = (OutHits[0].ImpactPoint - OutHits[0].Location);
+        FVector PinLocDirection = (OutHits[i].ImpactPoint - OutHits[i].Location);
         PinLocDirection.Normalize();
 
 
         float MaxAngle = 0.5 * PI;
-        float AngleMultiplier = modf(acos(FVector::DotProduct(NewLocNormal, PinLocDirection) / (NewLocNormal.Size() * PinLocDirection.Size())), &MaxAngle);
-        float PinLocMagnitude = (NewLoc - GetActorLocation()).Size() * AngleMultiplier;
+        float Multiplier = acos(FVector::DotProduct(NewLocNormal, PinLocDirection));
+        if (Multiplier > MaxAngle) {
+            Multiplier = 2 * PI - Multiplier;
+        }
+        Multiplier /= MaxAngle;
+        float PinLocMagnitude = (NewLoc - OutHits[i].Location).Size() * Multiplier;
 
         BP->NewLoc += PinLocDirection * PinLocMagnitude;
         PostCollisionLoc = NewLoc - (PinLocDirection * PinLocMagnitude);
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("NewLoc: %f"), (NewLoc - OutHits[i].Location).Size()));
 
-        CollisionLoc = OutHits[0].Location;
+        CollisionLoc = OutHits[i].Location;
+        
 
         // DrawDebugLine(GetWorld(), OutHits[0].Location, OutHits[0].ImpactPoint, FColor::Red, false, 100, 0, 10);
 
     }
-    isMoving = true;
 }
 

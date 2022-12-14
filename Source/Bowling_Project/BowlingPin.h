@@ -5,13 +5,14 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "Engine/EngineTypes.h"
 #include "BowlingPin.generated.h"
 
 UCLASS()
 class BOWLING_PROJECT_API ABowlingPin : public AActor
 {
-	GENERATED_BODY()
-	
+    GENERATED_BODY()
 public:	
 	// Sets default values for this actor's properties
 	ABowlingPin();
@@ -21,6 +22,9 @@ public:
     
     UPROPERTY(EditAnywhere)
     UStaticMeshComponent* Mesh;
+
+    UPROPERTY(EditAnywhere)
+    UCapsuleComponent* Capsule;
 
 protected:
 	// Called when the game starts or when spawned

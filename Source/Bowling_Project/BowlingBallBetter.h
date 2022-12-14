@@ -48,19 +48,24 @@ public:
     // Input functions
     void Move_YAxis(float AxisValue);
     void RollBall();
-    void ChangeAngle();
-    void ChangeSpeed();
-    void ChangeMass();
+    void AngleRight();
+    void AngleLeft();
+    void SpeedUp();
+    void SpeedDown();
+    void MassUp();
+    void MassDown();
     
     FVector CurrentVelocity;
     FVector CurrentLoc;
     FVector NewLoc;
     FVector CollisionLoc; 
     FVector PostCollisionLoc;
-    FVector ThrowDistance;
     
     ABowlingPin* BP;
     
-    int BallWeight;
+    float Speed;
+    float Angle;
+    float PinMass;
+    float Mass;
     bool isHit, isMoving; 
 };

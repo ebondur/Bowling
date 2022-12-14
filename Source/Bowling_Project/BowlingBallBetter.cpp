@@ -24,17 +24,20 @@ ABowlingBallBetter::ABowlingBallBetter()
     OurCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("OurCamera"));
     OurCamera->SetupAttachment(SpringArm);
     
-    BallWeight = 10; //represents different weights/types of bowling balls, need to implement later
+    Speed = 1000;
+    Angle = 0;
+    PinMass = 10;
+    Mass = 10; //represents different weights/types of bowling balls, need to implement later
     isHit = false, isMoving = false;
 }
 
 // Called when the game starts or when spawned
 void ABowlingBallBetter::BeginPlay()
 {
+
     Super::BeginPlay();
     CurrentLoc = GetActorLocation();
-    ThrowDistance = FVector(1000, 0, 0);
-    NewLoc = GetActorLocation() + ThrowDistance;
+    NewLoc = GetActorLocation();
     CollisionLoc = FVector(0);
     PostCollisionLoc = FVector(0);
 }
@@ -44,7 +47,7 @@ void ABowlingBallBetter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
     
-    DrawDebugLine(GetWorld(), GetActorLocation(), GetActorLocation() + ThrowDistance, FColor::Blue, false, -1, 0, 10);
+    DrawDebugLine(GetWorld(), GetActorLocation(), GetActorLocation() + FVector(Speed, Angle, 0), FColor::Blue, false, -1, 0, 10);
 
     // Handle side to side movement based on our "MoveY" axes
     if (!CurrentVelocity.IsZero())
@@ -53,10 +56,10 @@ void ABowlingBallBetter::Tick(float DeltaTime)
     }
     
     if (CurrentLoc.Equals(CollisionLoc, 5.0f)) {
-        NewLoc = PostCollisionLoc;
         CollisionLoc = FVector(0.0f);
         BP->MovePin();
         RollBall();
+        NewLoc = PostCollisionLoc;
     }
     
     if (CurrentLoc != NewLoc && isMoving) { //we have rolled the ball
@@ -74,6 +77,16 @@ void ABowlingBallBetter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
     InputComponent->BindAxis("Move_YAxis", this, &ABowlingBallBetter::Move_YAxis);
 
     InputComponent->BindAction("RollBall", IE_Pressed, this, &ABowlingBallBetter::RollBall);
+
+    InputComponent->BindAction("AngleRight", IE_Pressed, this, &ABowlingBallBetter::AngleRight);
+    InputComponent->BindAction("AngleLeft", IE_Pressed, this, &ABowlingBallBetter::AngleLeft);
+
+    InputComponent->BindAction("SpeedUp", IE_Pressed, this, &ABowlingBallBetter::SpeedUp);
+    InputComponent->BindAction("SpeedDown", IE_Pressed, this, &ABowlingBallBetter::SpeedDown);
+
+    InputComponent->BindAction("MassUp", IE_Pressed, this, &ABowlingBallBetter::MassUp);
+    InputComponent->BindAction("MassDown", IE_Pressed, this, &ABowlingBallBetter::MassDown);
+
 }
 
 void ABowlingBallBetter::Move_YAxis(float AxisValue)
@@ -87,6 +100,7 @@ void ABowlingBallBetter::Move_YAxis(float AxisValue)
 void ABowlingBallBetter::RollBall() {
     isMoving = true;
     CurrentLoc = GetActorLocation();
+    NewLoc = CurrentLoc + FVector(Speed, Angle, 0);
     FVector NewLocNormal = NewLoc - CurrentLoc;
     NewLocNormal.Normalize();
     
@@ -109,35 +123,61 @@ void ABowlingBallBetter::RollBall() {
             }
         }
         //first pin we hit
-        BP = Cast<ABowlingPin>(OutHits[0].GetActor());
+        BP = NULL;
+        int i = 0;
+        while (BP == NULL) {
+            BP = Cast<ABowlingPin>(OutHits[i].GetActor());
+            i++;
+        }
+        i--;
 
         // Gets direction the pin will move in
-        FVector PinLocDirection = (OutHits[0].ImpactPoint - OutHits[0].Location);
+        FVector PinLocDirection = (OutHits[i].ImpactPoint - OutHits[i].Location);
         PinLocDirection.Normalize();
 
-
+        // Calculates a modifier based on the angle of contact and the mass of the objects
         float MaxAngle = 0.5 * PI;
-        float AngleMultiplier = modf(acos(FVector::DotProduct(NewLocNormal, PinLocDirection) / (NewLocNormal.Size() * PinLocDirection.Size())), &MaxAngle);
-        float PinLocMagnitude = (NewLoc - GetActorLocation()).Size() * AngleMultiplier;
+        float MassRatio = Mass / PinMass;
+        float Multiplier = acos(FVector::DotProduct(NewLocNormal, PinLocDirection));
+        if (Multiplier > MaxAngle) {
+            Multiplier = 2 * PI - Multiplier;
+        }
+        Multiplier /= MaxAngle;
+        if (MassRatio < 1.0) {
+            Multiplier *= MassRatio;
+        }
+        float PinLocMagnitude = (NewLoc - OutHits[i].Location).Size() * Multiplier;
 
         BP->NewLoc += PinLocDirection * PinLocMagnitude;
-        PostCollisionLoc = NewLoc - (PinLocDirection * PinLocMagnitude);
+        PostCollisionLoc = NewLoc - (PinLocDirection * PinLocMagnitude * (1 / MassRatio));
 
-        CollisionLoc = OutHits[0].Location;
+        CollisionLoc = OutHits[i].Location;
         
-        DrawDebugLine(GetWorld(), OutHits[0].Location, OutHits[0].ImpactPoint, FColor::Red, false, 100, 0, 10);
+        DrawDebugLine(GetWorld(), OutHits[i].Location, OutHits[i].ImpactPoint, FColor::Red, false, 100, 0, 10);
         
     }
 }
 
-void ABowlingBallBetter::ChangeAngle() {
-    
+void ABowlingBallBetter::AngleRight() {
+    Angle += 10.0;
 }
 
-void ABowlingBallBetter::ChangeSpeed() {
-
+void ABowlingBallBetter::AngleLeft() {
+    Angle -= 10.0;
 }
 
-void ABowlingBallBetter::ChangeMass() {
+void ABowlingBallBetter::SpeedUp() {
+    Speed += 100.0;
+}
 
+void ABowlingBallBetter::SpeedDown() {
+    Speed -= 100.0;
+}
+
+void ABowlingBallBetter::MassUp() {
+    Mass += 1.0;
+}
+
+void ABowlingBallBetter::MassDown() {
+    Mass -= 1.0;
 }
