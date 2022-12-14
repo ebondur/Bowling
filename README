@@ -1,0 +1,28 @@
+For Windows (Recommended):
+In order to get the simulation to run, you will need Unreal Engine and Visual Studio. 
+To start, open the folder where you unzipped our project in Visual Studio. You may have to 
+install certain modules, but Visual Studio will prompt you for the necessary missing components.
+Next, go to the folder where the unzipped files are and right click on “Bowling_Project”. 
+Hit the “Generate Visual Studio Project Files button, and it should generate a file called “Bowling_Project.sln”. 
+Go back to Visual Studio, in the Solution Explorer, hit “Switch between solutions and available views”. 
+Double click on the Bowling_Project.sln file. Right click on the Bowling_Project file and click the build option. 
+Finally, hit the green play button on the box near the top of the Visual Studio window, “Local Windows Debugger box”. 
+This should open the project in Unreal Engine.
+
+For MAC (Not Recommended): 
+Mac requires MacOS Catalina 10.15.7 and XCode 12.4 to compile and run the project on Unreal 5.0 according to official 
+Unreal Engine Documentation (this was developed and tested on a 2019 Macbook Pro running MacOS Monterey 12.6 and XCode version 14.2). 
+First, unzip the zipped file containing the Unreal Project, which should produce a folder containing the UProject file and 
+other folders needed. Second, move this file to where your Mac stores your Unreal Projects (for me, it was under my Documents, which was 
+accessible by opening a Finder window and navigating to Documents/Unreal Projects). Then, open the Epic Games Launcher, 
+launch Unreal Engine 5.1, and select our project level. You may be prompted to add missing modules. In this case, you should add the missing 
+modules and it should relaunch the project. After it launches, it should load up the bowling level. However, as we have learned through this project, 
+Unreal and Mac do not really play well together, so Evan (the Mac user) recommends using Windows to test our project.
+
+Once the Simulation is open:
+Hit the play button in the top of the window and click anywhere in the simulation window to gain control of the bowling ball. Input keys are as follows:
+A/D - move the ball side to side
+W/S - make the ball go faster and slower
+Q/E - rotate the ball left and right
+Up-arrow/Down-arrow - increase/decrease the mass of the ball
+spacebar  - make the ball go
